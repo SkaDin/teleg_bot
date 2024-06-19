@@ -18,12 +18,12 @@ type Processor struct {
 	storage storage.Storage
 }
 
-func New(client *telegram.Client, storage storage.Storage) *Processor {
-	return &Processor{
-		tg:      client,
-		storage: storage,
-	}
-}
+//func New(client *telegram.Client, storage storage.Storage) *Processor {
+//	return &Processor{
+//		tg:      client,
+//		storage: storage,
+//	}
+//}
 
 func (p *Processor) Fetch(limit int) ([]events.Event, error) {
 	updates, err := p.tg.Updates(p.offset, limit)
