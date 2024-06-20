@@ -1,45 +1,58 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
-	"teleg_bot/clients/telegram"
+
+	tgClient "teleg_bot/clients/telegram"
+	"teleg_bot/consumer/event-consumer"
+	"teleg_bot/events/telegram"
+	"teleg_bot/storage/sqlite"
+)
+
+const (
+	tgBotHost         = "api.telegram.org"
+	sqliteStoragePath = "data/sqlite/storage.db"
+	batchSize         = 100
 )
 
 func main() {
-	// token = flags.Get(token)
-	tgClient := telegram.New(mustHost(), mustToken())
+	s, err := sqlite.New(sqliteStoragePath)
+	if err != nil {
+		log.Fatal("can't connect to storage: ", err)
+	}
 
-	_ = tgClient
-	// fetcher = fetcher.New()
+	if err := s.Init(context.TODO()); err != nil {
+		log.Fatal("can't init storage: ", err)
+	}
 
-	// processor = processor.New()
+	eventsProcessor := telegram.New(
+		tgClient.New(tgBotHost, mustToken()),
+		s,
+	)
 
-	// consumer.Start(fetcher, processor)
+	log.Print("service started")
+
+	consumer := event_consumer.New(eventsProcessor, eventsProcessor, batchSize)
+
+	if err := consumer.Start(); err != nil {
+		log.Fatal("service is stopped", err)
+	}
 }
 
 func mustToken() string {
 	token := flag.String(
-		"token-bot-token",
+		"tg-bot-token",
 		"",
 		"token for access to telegram bot",
 	)
+
 	flag.Parse()
+
 	if *token == "" {
 		log.Fatal("token is not specified")
 	}
-	return *token
-}
 
-func mustHost() string {
-	host := flag.String(
-		"host-bot-telegram",
-		"api.telegram.org",
-		"host telegram",
-	)
-	flag.Parse()
-	if *host == "" {
-		log.Fatal("host is not specified")
-	}
-	return *host
+	return *token
 }

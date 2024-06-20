@@ -18,11 +18,11 @@ type Client struct {
 
 const (
 	getUpdatesMethod  = "getUpdates"
-	sendMessageMethod = "sendUpdates"
+	sendMessageMethod = "sendMessage"
 )
 
-func New(host, token string) Client {
-	return Client{
+func New(host, token string) *Client {
+	return &Client{
 		host:     host,
 		basePath: newBasePath(token),
 		client:   http.Client{},
